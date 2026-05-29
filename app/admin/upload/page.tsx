@@ -38,7 +38,43 @@ export default function DataUploadPage() {
           // Process in batches of 100
           const batchSize = 100;
           for (let i = 0; i < rows.length; i += batchSize) {
-            const batch = rows.slice(i, i + batchSize);
+            const batch = rows.slice(i, i + batchSize).map(row => {
+              const cleanRow: any = { ...row };
+              
+              // Standardize case-sensitive fields
+               if (cleanRow.category) {
+                 const c = cleanRow.category.toLowerCase().trim();
+                 if (c === 'open' || c === 'general') cleanRow.category = 'OPEN';
+                 else if (c.includes('obc')) cleanRow.category = 'OBC-NCL';
+                 else cleanRow.category = cleanRow.category.toUpperCase().trim();
+               }
+
+               if (cleanRow.quota) {
+                 const q = cleanRow.quota.toLowerCase().trim();
+                 if (q === 'all india' || q === 'ai') cleanRow.quota = 'AI';
+                 else if (q === 'home state' || q === 'hs') cleanRow.quota = 'HS';
+                 else if (q === 'other state' || q === 'os') cleanRow.quota = 'OS';
+                 else cleanRow.quota = cleanRow.quota.toUpperCase().trim();
+               }
+              
+              // Standardize Gender (Gender-Neutral or Female-only)
+              if (cleanRow.gender) {
+                const g = cleanRow.gender.toLowerCase();
+                if (g.includes('female')) cleanRow.gender = 'Female-only';
+                else cleanRow.gender = 'Gender-Neutral';
+              }
+
+              // Ensure numeric fields are actually numbers
+              if (cleanRow.year) cleanRow.year = parseInt(cleanRow.year);
+              if (cleanRow.round) cleanRow.round = parseInt(cleanRow.round);
+              if (cleanRow.opening_rank) cleanRow.opening_rank = parseInt(cleanRow.opening_rank);
+              if (cleanRow.closing_rank) cleanRow.closing_rank = parseInt(cleanRow.closing_rank);
+              if (cleanRow.nirf_rank) cleanRow.nirf_rank = parseInt(cleanRow.nirf_rank);
+              if (cleanRow.avg_package) cleanRow.avg_package = parseFloat(cleanRow.avg_package);
+
+              return cleanRow;
+            });
+            
             const { error } = await supabase.from(targetTable).insert(batch);
             
             if (error) {

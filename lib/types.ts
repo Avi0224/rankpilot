@@ -5,6 +5,15 @@ export type Gender = 'Gender-Neutral' | 'Female-only';
 export type CounsellingType = 'JoSAA' | 'CSAB' | 'JAC Delhi' | 'COMEDK' | 'MHT CET' | 'State';
 
 export const CATEGORIES: Category[] = ['OPEN', 'OBC-NCL', 'SC', 'ST', 'EWS', 'OPEN-PwD'];
+export const QUOTAS: { label: string; value: Quota }[] = [
+  { label: 'All India', value: 'AI' },
+  { label: 'Home State', value: 'HS' },
+  { label: 'Other State', value: 'OS' },
+];
+export const GENDERS: { label: string; value: Gender }[] = [
+  { label: 'Gender-Neutral', value: 'Gender-Neutral' },
+  { label: 'Female-only', value: 'Female-only' },
+];
 
 export interface College {
   id: string;
@@ -78,12 +87,12 @@ export interface SavedCollege {
   created_at: string;
 }
 
-export interface ChoiceList {
+export interface ComparisonList {
   id: string;
   user_id: string;
   name: string;
-  counselling_type: CounsellingType;
-  preferences: ChoicePreference[];
+  counselling_type: string;
+  preferences: any[];
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -102,7 +111,7 @@ export interface PredictorInput {
   rank: number;
   category: Category;
   gender: string;
-  homeState: string;
+  home_state: string;
   preferredBranches: string[];
   budgetMax: number;
   preferredStates: string[];
@@ -124,7 +133,7 @@ export type Database = {
       cutoffs: { Row: Cutoff; Insert: Omit<Cutoff, 'id' | 'created_at'>; Update: Partial<Omit<Cutoff, 'id'>> };
       user_profiles: { Row: UserProfile; Insert: Omit<UserProfile, 'created_at' | 'updated_at'>; Update: Partial<Omit<UserProfile, 'id'>> };
       saved_colleges: { Row: SavedCollege; Insert: Omit<SavedCollege, 'id' | 'created_at'>; Update: Partial<Omit<SavedCollege, 'id'>> };
-      choice_lists: { Row: ChoiceList; Insert: Omit<ChoiceList, 'id' | 'created_at' | 'updated_at'>; Update: Partial<Omit<ChoiceList, 'id'>> };
+      comparison_lists: { Row: ComparisonList; Insert: Omit<ComparisonList, 'id' | 'created_at' | 'updated_at'>; Update: Partial<Omit<ComparisonList, 'id'>> };
     };
   };
 };

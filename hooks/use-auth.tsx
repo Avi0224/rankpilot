@@ -31,15 +31,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .from('user_profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
-        console.error('Error fetching profile:', error);
+        // Silently fail if table doesn't exist yet, avoiding frontend crashes
+        if (error.code === 'PGRST116' || error.message.includes('user_profiles')) {
+          return null;
+        }
+        console.error('Profile fetch error:', error.message);
         return null;
       }
       return data;
     } catch (err) {
-      console.error('Unexpected error fetching profile:', err);
       return null;
     }
   };
@@ -63,7 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setProfile(profileData);
         }
       } catch (error) {
-        console.error('Error initializing auth:', error);
+        // Auth initialization failure handled by loading state
       } finally {
         setLoading(false);
       }
@@ -90,7 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // Protection logic
+  // Route Protection Logic
   useEffect(() => {
     if (loading) return;
 
