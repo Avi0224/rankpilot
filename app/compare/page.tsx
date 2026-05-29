@@ -1,185 +1,232 @@
 'use client';
 
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Plus, X, TrendingUp, Award, DollarSign, Home, Users, BarChart3, Star } from 'lucide-react';
-import Navbar from '@/components/landing/Navbar';
+import { useState, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Plus, X, TrendingUp, Award, DollarSign, Home, Users, 
+  BarChart3, Star, MapPin, Building2, ExternalLink, ArrowLeft, Trash2, GitCompare
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-
-const allColleges = [
-  { id: '11111111', name: 'NIT Trichy', type: 'NIT', state: 'Tamil Nadu', nirfRank: 9, avgPkg: 12.5, medianPkg: 8.5, highestPkg: 50, fees: 1.45, hostelFees: 0.85, placement: 94.5, roiScore: 8.7, closingRank: 4850 },
-  { id: '22222222', name: 'DTU Delhi', type: 'State', state: 'Delhi', nirfRank: 36, avgPkg: 11.0, medianPkg: 7.8, highestPkg: 45, fees: 1.70, hostelFees: 0.72, placement: 92.0, roiScore: 8.4, closingRank: 3200 },
-  { id: '33333333', name: 'IIIT Allahabad', type: 'IIIT', state: 'UP', nirfRank: 52, avgPkg: 10.5, medianPkg: 7.5, highestPkg: 40, fees: 2.20, hostelFees: 0.90, placement: 91.0, roiScore: 7.8, closingRank: 9800 },
-  { id: '44444444', name: 'NIT Surathkal', type: 'NIT', state: 'Karnataka', nirfRank: 16, avgPkg: 11.8, medianPkg: 8.2, highestPkg: 48, fees: 1.51, hostelFees: 0.88, placement: 93.5, roiScore: 8.5, closingRank: 7900 },
-  { id: '55555555', name: 'NIT Warangal', type: 'NIT', state: 'Telangana', nirfRank: 26, avgPkg: 11.5, medianPkg: 8.0, highestPkg: 42, fees: 1.48, hostelFees: 0.82, placement: 93.0, roiScore: 8.6, closingRank: 7200 },
-  { id: '77777777', name: 'IIIT Hyderabad', type: 'IIIT', state: 'Telangana', nirfRank: 26, avgPkg: 14.0, medianPkg: 11.0, highestPkg: 60, fees: 3.20, hostelFees: 1.10, placement: 95.5, roiScore: 7.5, closingRank: 2100 },
-];
+import { useCompare } from '@/hooks/use-compare';
+import { getCollegesByIds } from '@/lib/queries';
+import { type College } from '@/lib/types';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 const typeColors: Record<string, string> = {
   NIT: 'text-blue-400 bg-blue-400/10 border-blue-400/25',
   IIIT: 'text-cyan-400 bg-cyan-400/10 border-cyan-400/25',
+  IIT: 'text-orange-400 bg-orange-400/10 border-orange-400/25',
+  GFTIs: 'text-slate-400 bg-slate-400/10 border-slate-400/25',
   State: 'text-teal-400 bg-teal-400/10 border-teal-400/25',
 };
 
 const metrics = [
-  { key: 'nirfRank', label: 'NIRF Rank', icon: Award, format: (v: number) => `#${v}`, lowerIsBetter: true },
-  { key: 'closingRank', label: 'JEE Closing Rank', icon: BarChart3, format: (v: number) => v.toLocaleString(), lowerIsBetter: true },
-  { key: 'avgPkg', label: 'Avg Package', icon: TrendingUp, format: (v: number) => `₹${v} LPA`, lowerIsBetter: false },
-  { key: 'medianPkg', label: 'Median Package', icon: TrendingUp, format: (v: number) => `₹${v} LPA`, lowerIsBetter: false },
-  { key: 'highestPkg', label: 'Highest Package', icon: Star, format: (v: number) => `₹${v} LPA`, lowerIsBetter: false },
-  { key: 'fees', label: 'Annual Fees', icon: DollarSign, format: (v: number) => `₹${v}L/yr`, lowerIsBetter: true },
-  { key: 'hostelFees', label: 'Hostel Fees', icon: Home, format: (v: number) => `₹${v}L/yr`, lowerIsBetter: true },
-  { key: 'placement', label: 'Placement %', icon: Users, format: (v: number) => `${v}%`, lowerIsBetter: false },
-  { key: 'roiScore', label: 'ROI Score', icon: BarChart3, format: (v: number) => `${v}/10`, lowerIsBetter: false },
+  { key: 'nirf_rank', label: 'NIRF Rank', icon: Award, format: (v: any) => v ? `#${v}` : 'N/A', lowerIsBetter: true },
+  { key: 'avg_package', label: 'Avg Package', icon: TrendingUp, format: (v: any) => v ? `₹${v} LPA` : 'N/A', lowerIsBetter: false },
+  { key: 'median_package', label: 'Median Package', icon: BarChart3, format: (v: any) => v ? `₹${v} LPA` : 'N/A', lowerIsBetter: false },
+  { key: 'highest_package', label: 'Highest Package', icon: Star, format: (v: any) => v ? `₹${v} LPA` : 'N/A', lowerIsBetter: false },
+  { key: 'fees_per_year', label: 'Yearly Fees', icon: DollarSign, format: (v: any) => v ? `₹${(v/100000).toFixed(2)}L` : 'N/A', lowerIsBetter: true },
+  { key: 'hostel_fees_per_year', label: 'Hostel Fees', icon: Home, format: (v: any) => v ? `₹${(v/100000).toFixed(2)}L` : 'N/A', lowerIsBetter: true },
+  { key: 'placement_percentage', label: 'Placement %', icon: Users, format: (v: any) => v ? `${v}%` : 'N/A', lowerIsBetter: false },
+  { key: 'roi_score', label: 'ROI Score', icon: TrendingUp, format: (v: any) => v ? `${v}/10` : 'N/A', lowerIsBetter: false },
+  { key: 'campus_size_acres', label: 'Campus Size', icon: Building2, format: (v: any) => v ? `${v} Acres` : 'N/A', lowerIsBetter: false },
+  { key: 'established_year', label: 'Established', icon: Award, format: (v: any) => v || 'N/A', lowerIsBetter: true },
 ];
 
 export default function ComparePage() {
-  const [selected, setSelected] = useState([allColleges[0], allColleges[1], allColleges[3]]);
-  const [showPicker, setShowPicker] = useState(false);
+  const { selectedColleges, removeFromCompare, clearCompare } = useCompare();
+  const [detailedColleges, setDetailedColleges] = useState<College[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const add = (college: typeof allColleges[0]) => {
-    if (selected.length < 4 && !selected.find((c) => c.id === college.id)) {
-      setSelected([...selected, college]);
-    }
-    setShowPicker(false);
-  };
+  useEffect(() => {
+    const fetchDetails = async () => {
+      if (selectedColleges.length === 0) {
+        setDetailedColleges([]);
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+      try {
+        const data = await getCollegesByIds(selectedColleges.map(c => c.id));
+        setDetailedColleges(data || []);
+      } catch (err) {
+        console.error('Failed to fetch college details');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDetails();
+  }, [selectedColleges]);
 
-  const remove = (id: string) => setSelected(selected.filter((c) => c.id !== id));
-
-  const getBest = (key: string, lowerIsBetter: boolean) => {
-    const vals = selected.map((c) => Number(c[key as keyof typeof c]));
+  const getBestValue = (key: string, lowerIsBetter: boolean) => {
+    const vals = detailedColleges
+      .map(c => c[key as keyof College])
+      .filter(v => v !== null && v !== undefined && typeof v === 'number') as number[];
+    
+    if (vals.length === 0) return null;
     return lowerIsBetter ? Math.min(...vals) : Math.max(...vals);
   };
 
+  if (selectedColleges.length === 0) {
+    return (
+      <div className="min-h-screen bg-[#050816] flex items-center justify-center p-6">
+        <div className="text-center space-y-6 max-w-md">
+          <div className="w-24 h-24 rounded-full bg-blue-600/10 flex items-center justify-center mx-auto border border-blue-500/20">
+            <GitCompare className="w-12 h-12 text-blue-500/50" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-white mb-2">No Colleges Selected</h1>
+            <p className="text-slate-500">Add up to 4 colleges from the predictor to compare them side-by-side.</p>
+          </div>
+          <Link href="/dashboard">
+            <Button className="bg-blue-600 hover:bg-blue-500 text-white rounded-2xl px-8 h-12 font-bold">
+              Go to Predictor
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[#050816]">
-      <Navbar />
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">College Comparison</h1>
-            <p className="text-slate-500">Compare up to 4 colleges side-by-side across key metrics.</p>
+    <div className="min-h-screen bg-[#050816] pb-20">
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-40 bg-[#060c1a]/80 backdrop-blur-2xl border-b border-blue-900/20 px-4 md:px-8 h-16 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Link href="/dashboard">
+            <button className="p-2 rounded-xl bg-blue-600/10 text-blue-400 border border-blue-500/20 hover:bg-blue-600/20 transition-all">
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+          </Link>
+          <div>
+            <h1 className="text-lg font-bold text-white leading-tight">Comparison Matrix</h1>
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+              {detailedColleges.length} Institutes Selected
+            </p>
           </div>
+        </div>
 
-          {/* College selector chips */}
-          <div className="flex flex-wrap gap-3 mb-8">
-            {selected.map((college) => (
-              <div key={college.id} className="flex items-center gap-2 px-4 py-2 glass-card rounded-xl border border-blue-500/20">
-                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${typeColors[college.type]}`}>{college.type}</span>
-                <span className="text-white text-sm font-medium">{college.name}</span>
-                <button onClick={() => remove(college.id)} className="text-slate-500 hover:text-red-400 ml-1 transition-colors">
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            ))}
+        <Button 
+          variant="ghost" 
+          onClick={clearCompare}
+          className="text-slate-500 hover:text-red-400 gap-2 font-bold text-xs"
+        >
+          <Trash2 className="w-4 h-4" />
+          <span className="hidden sm:inline">Clear All</span>
+        </Button>
+      </div>
 
-            {selected.length < 4 && (
-              <button
-                onClick={() => setShowPicker(true)}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl border border-dashed border-blue-500/30 text-blue-400/60 hover:text-blue-400 hover:border-blue-500/50 text-sm transition-all"
-              >
-                <Plus className="w-4 h-4" />
-                Add College
-              </button>
-            )}
-          </div>
-
-          {/* College picker dropdown */}
-          {showPicker && (
-            <motion.div
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="glass-card rounded-2xl border border-blue-500/20 p-4 mb-6 grid grid-cols-2 sm:grid-cols-3 gap-3"
-            >
-              {allColleges
-                .filter((c) => !selected.find((s) => s.id === c.id))
-                .map((college) => (
-                  <button
-                    key={college.id}
-                    onClick={() => add(college)}
-                    className="flex flex-col items-start p-3 rounded-xl bg-[#0B1120] border border-blue-900/30 hover:border-blue-500/40 text-left transition-all"
-                  >
-                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border mb-1.5 ${typeColors[college.type]}`}>{college.type}</span>
-                    <span className="text-white text-xs font-medium">{college.name}</span>
-                    <span className="text-slate-500 text-[10px]">{college.state}</span>
-                  </button>
-                ))}
-              <button onClick={() => setShowPicker(false)} className="col-span-full text-slate-500 text-xs hover:text-slate-300 mt-1 transition-colors">
-                Cancel
-              </button>
-            </motion.div>
-          )}
-
-          {/* Comparison table */}
-          <div className="overflow-x-auto rounded-2xl border border-blue-500/15 shadow-xl">
-            <table className="w-full min-w-[600px]">
-              <thead>
-                <tr className="border-b border-blue-900/30 bg-[#070d1a]">
-                  <th className="text-left text-xs text-slate-500 font-medium uppercase tracking-wider px-6 py-4 w-44">Metric</th>
-                  {selected.map((college) => (
-                    <th key={college.id} className="px-4 py-4 text-center">
-                      <div className="text-white font-semibold text-sm">{college.name}</div>
-                      <div className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border mt-1 ${typeColors[college.type]}`}>
-                        {college.type} · {college.state}
+      <div className="max-w-7xl mx-auto p-4 md:p-8">
+        <div className="overflow-x-auto rounded-[2rem] border border-blue-900/30 shadow-2xl bg-[#0B1120]/50 backdrop-blur-xl scrollbar-none">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="bg-[#050816]/50">
+                <th className="sticky left-0 z-20 bg-[#050816] text-left px-6 py-8 border-r border-blue-900/20 w-48 shrink-0">
+                  <div className="text-xs font-bold text-blue-500 uppercase tracking-[0.2em]">Parameter</div>
+                </th>
+                {loading ? (
+                  Array(selectedColleges.length).fill(0).map((_, i) => (
+                    <th key={i} className="px-6 py-8 min-w-[280px]">
+                      <div className="space-y-3">
+                        <Skeleton className="h-6 w-32 bg-blue-900/20 rounded-lg mx-auto" />
+                        <Skeleton className="h-4 w-24 bg-blue-900/10 rounded-full mx-auto" />
                       </div>
                     </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-blue-900/20 bg-[#080e1d]">
-                {metrics.map((metric) => {
-                  const best = getBest(metric.key, metric.lowerIsBetter);
-                  const Icon = metric.icon;
-                  return (
-                    <tr key={metric.key} className="hover:bg-blue-950/20 transition-colors">
-                      <td className="px-6 py-4 text-slate-500 text-xs font-medium">
-                        <div className="flex items-center gap-2">
-                          <Icon className="w-3.5 h-3.5 text-slate-600" />
-                          {metric.label}
+                  ))
+                ) : (
+                  detailedColleges.map((college) => (
+                    <th key={college.id} className="px-6 py-8 min-w-[280px] border-l border-blue-900/10 group">
+                      <div className="relative">
+                        <button 
+                          onClick={() => removeFromCompare(college.id)}
+                          className="absolute -top-4 -right-2 p-1.5 rounded-lg bg-red-500/10 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                        <Badge className={cn("mb-3 uppercase tracking-tighter text-[9px]", typeColors[college.type])}>
+                          {college.type}
+                        </Badge>
+                        <h2 className="text-white font-bold text-base leading-tight mb-2 line-clamp-2">
+                          {college.name}
+                        </h2>
+                        <div className="flex items-center justify-center gap-1.5 text-slate-500 text-[10px] font-bold uppercase">
+                          <MapPin className="w-3 h-3" />
+                          {college.city}, {college.state}
                         </div>
-                      </td>
-                      {selected.map((college) => {
-                        const val = Number(college[metric.key as keyof typeof college]);
-                        const isBest = val === best;
-                        return (
-                          <td key={college.id} className="px-4 py-4 text-center">
-                            <span className={`text-sm font-semibold px-2 py-0.5 rounded-lg transition-colors ${
-                              isBest
-                                ? 'text-emerald-400 bg-emerald-400/10 border border-emerald-400/20'
-                                : 'text-slate-300'
-                            }`}>
+                        <Link href={`/college/${college.id}`}>
+                          <Button variant="ghost" className="mt-4 h-8 text-[10px] gap-2 text-blue-400 hover:text-white rounded-lg">
+                            View Profile <ExternalLink className="w-3 h-3" />
+                          </Button>
+                        </Link>
+                      </div>
+                    </th>
+                  ))
+                )}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-blue-900/10">
+              {metrics.map((metric) => {
+                const bestValue = getBestValue(metric.key, metric.lowerIsBetter);
+                return (
+                  <tr key={metric.key} className="hover:bg-white/[0.02] transition-colors group">
+                    <td className="sticky left-0 z-20 bg-[#060c1a] px-6 py-5 border-r border-blue-900/20">
+                      <div className="flex items-center gap-3">
+                        <div className="w-7 h-7 rounded-lg bg-slate-800/50 flex items-center justify-center">
+                          <metric.icon className="w-3.5 h-3.5 text-slate-400" />
+                        </div>
+                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{metric.label}</span>
+                      </div>
+                    </td>
+                    {detailedColleges.map((college) => {
+                      const val = college[metric.key as keyof College];
+                      const isBest = val !== null && val !== undefined && val === bestValue;
+                      return (
+                        <td key={college.id} className="px-6 py-5 text-center border-l border-blue-900/5">
+                          <div className={cn(
+                            "inline-flex flex-col items-center px-4 py-2 rounded-2xl transition-all duration-500",
+                            isBest ? "bg-emerald-500/10 border border-emerald-500/20 scale-105 shadow-lg shadow-emerald-500/5" : ""
+                          )}>
+                            <span className={cn(
+                              "text-sm font-bold",
+                              isBest ? "text-emerald-400" : "text-slate-200"
+                            )}>
                               {metric.format(val)}
                             </span>
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                            {isBest && (
+                              <span className="text-[8px] font-black text-emerald-500/80 uppercase tracking-tighter mt-0.5">
+                                Best Choice
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        
+        <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-6 px-4">
+          <div className="flex items-center gap-2 text-slate-500 text-xs">
+            <div className="w-3 h-3 rounded bg-emerald-500/20 border border-emerald-500/30" />
+            <span>Highlighted metrics represent the superior choice.</span>
           </div>
-
-          <p className="text-slate-600 text-xs mt-3 text-center">
-            Highlighted values indicate the best in each metric across selected colleges.
-          </p>
-
-          {/* CTA */}
-          <div className="flex justify-center mt-8 gap-4">
+          <div className="flex gap-4">
             <Link href="/dashboard">
-              <Button className="bg-blue-600 hover:bg-blue-500 text-white gap-2">
-                Predict My Colleges
+              <Button variant="outline" className="border-blue-900/30 text-slate-300 rounded-2xl h-11 px-6">
+                Add More Colleges
               </Button>
             </Link>
-            <Link href="/choice-filling">
-              <Button variant="outline" className="border-blue-500/30 text-slate-300 hover:text-white gap-2">
-                Build Choice List
-              </Button>
-            </Link>
+            <Button className="bg-blue-600 hover:bg-blue-500 text-white rounded-2xl h-11 px-8 font-bold shadow-lg shadow-blue-600/20">
+              Download Report
+            </Button>
           </div>
-        </motion.div>
+        </div>
       </div>
     </div>
   );

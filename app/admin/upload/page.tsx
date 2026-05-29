@@ -38,8 +38,8 @@ export default function DataUploadPage() {
           // Process in batches of 100
           const batchSize = 100;
           for (let i = 0; i < rows.length; i += batchSize) {
-            const batch = rows.slice(i, i + batchSize).map(row => {
-              const cleanRow: any = { ...row };
+            const batch = rows.slice(i, i + batchSize).map(row => {      
+              const cleanRow: any = { ...(row as any) };
               
               // Standardize case-sensitive fields
                if (cleanRow.category) {

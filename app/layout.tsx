@@ -2,6 +2,8 @@ import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { AuthProvider } from '@/hooks/use-auth';
+import { ComparisonProvider } from '@/hooks/use-compare';
+import { RecentlyViewedProvider } from '@/hooks/use-recently-viewed';
 import { Toaster } from 'sonner';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -21,8 +23,12 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className={`${inter.className} bg-[#050816] text-slate-200 antialiased`}>
         <AuthProvider>
-          {children}
-          <Toaster position="top-right" richColors theme="dark" />
+          <ComparisonProvider>
+            <RecentlyViewedProvider>
+              {children}
+              <Toaster position="top-right" richColors theme="dark" />
+            </RecentlyViewedProvider>
+          </ComparisonProvider>
         </AuthProvider>
       </body>
     </html>

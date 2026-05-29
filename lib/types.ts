@@ -117,12 +117,26 @@ export interface PredictorInput {
   preferredStates: string[];
 }
 
-export interface PredictionResult {
+export interface PredictorParams {
+  rank: number;
+  category: string;
+  quota: string;
+  gender: string;
+  year?: number;
+  instituteTypes?: CollegeType[];
+  states?: string[];
+  branches?: string[];
+  minPackage?: number;
+  maxFees?: number;
+}
+
+export interface PredictionResult extends Cutoff {
   college: College;
   branch: Branch;
   cutoff: Cutoff;
   probability: 'safe' | 'moderate' | 'dream';
   confidenceScore: number;
+  reason: string;
 }
 
 export type Database = {

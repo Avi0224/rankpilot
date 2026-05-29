@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { Database, Category, Quota, Gender, PredictionResult } from './types';
+import { Database, Category, Quota, Gender, PredictionResult, PredictorParams } from './types';
 
 // Standardized Normalization Helpers
 export const normalizeQuota = (quota: string): Quota => {
@@ -39,14 +39,11 @@ export const normalizeGender = (gender: string): Gender => {
  * Predicts colleges based on user rank and criteria.
  * Production-ready implementation with robust filtering and classification.
  */
-export const predictColleges = async (params: {
-  rank: number;
-  category: string;
-  quota: string;
-  gender: string;
-  year?: number;
-}): Promise<PredictionResult[]> => {
-  const { rank, category, quota, gender, year } = params;
+export const predictColleges = async (params: PredictorParams): Promise<PredictionResult[]> => {
+  const { 
+    rank, category, quota, gender, year, 
+    instituteTypes, states, branches, minPackage, maxFees 
+  } = params;
 
   // 1. Apply strict normalization for database compatibility
   const finalCategory = normalizeCategory(category);
@@ -72,6 +69,23 @@ export const predictColleges = async (params: {
     query = query.eq('year', year);
   }
 
+  // Apply Advanced Filters
+  if (instituteTypes && instituteTypes.length > 0) {
+    query = query.in('colleges.type', instituteTypes);
+  }
+  if (states && states.length > 0) {
+    query = query.in('colleges.state', states);
+  }
+  if (branches && branches.length > 0) {
+    query = query.in('branches.branch_name', branches);
+  }
+  if (minPackage) {
+    query = query.gte('colleges.avg_package', minPackage);
+  }
+  if (maxFees) {
+    query = query.lte('colleges.fees_per_year', maxFees);
+  }
+
   const { data, error } = await query.order('closing_rank', { ascending: true });
 
   if (error) {
@@ -88,23 +102,36 @@ export const predictColleges = async (params: {
     
     let probability: 'safe' | 'moderate' | 'dream' = 'dream';
     let confidenceScore = 0;
+    let reason = '';
 
-    // Classification Algorithm
-    if (diffPercent > 15) {
+    // Advanced Classification Algorithm with Reasons
+    if (diffPercent > 20) {
       probability = 'safe';
-      confidenceScore = Math.min(98, 75 + diffPercent);
+      confidenceScore = Math.min(99, 85 + diffPercent / 2);
+      reason = 'Highly likely based on consistent historical cutoff trends.';
+    } else if (diffPercent > 5) {
+      probability = 'safe';
+      confidenceScore = 70 + diffPercent;
+      reason = 'Very safe option with a comfortable rank margin.';
     } else if (diffPercent >= 0) {
       probability = 'moderate';
-      confidenceScore = 50 + (diffPercent * 3);
+      confidenceScore = 40 + (diffPercent * 5);
+      reason = 'Borderline match. Admission is probable but competitive.';
+    } else if (diffPercent > -5) {
+      probability = 'dream';
+      confidenceScore = 20 + (diffPercent + 5) * 4;
+      reason = 'Ambitious target. Admission depends on slight trend shifts.';
     } else {
       probability = 'dream';
-      confidenceScore = Math.max(5, 30 + diffPercent);
+      confidenceScore = Math.max(5, 10 + diffPercent);
+      reason = 'Highly ambitious. Significant cutoff drop required.';
     }
 
     return {
       ...item,
       probability,
-      confidenceScore: Math.round(confidenceScore)
+      confidenceScore: Math.round(confidenceScore),
+      reason
     };
   });
 };
@@ -124,9 +151,19 @@ export const getColleges = async () => {
 export const getCollegeById = async (id: string) => {
   const { data, error } = await supabase
     .from('colleges')
-    .select('*, branches(*)')
+    .select('*, branches(*), cutoffs(*)')
     .eq('id', id)
     .single();
+  if (error) throw error;
+  return data;
+};
+
+export const getCollegesByIds = async (ids: string[]) => {
+  if (!ids.length) return [];
+  const { data, error } = await supabase
+    .from('colleges')
+    .select('*, branches(*)')
+    .in('id', ids);
   if (error) throw error;
   return data;
 };

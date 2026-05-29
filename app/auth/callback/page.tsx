@@ -9,23 +9,23 @@ export default function AuthCallback() {
 
   useEffect(() => {
     const handleCallback = async () => {
-      const { error } = await supabase.auth.exchangeCodeForSession(
-        window.location.search.split('code=')[1]?.split('&')[0] || ''
-      );
-      
-      if (error) {
-        console.error('Error exchanging code for session:', error.message);
-        router.push('/auth?error=OAuth callback failed');
+      const searchParams = new URLSearchParams(window.location.search);
+      const code = searchParams.get('code');
+
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (error) {
+          console.error('Auth callback error:', error.message);
+          router.push('/auth?error=Authentication failed');
+        } else {
+          router.push('/dashboard');
+        }
       } else {
-        router.push('/dashboard');
+        router.push('/auth');
       }
     };
 
-    if (window.location.search.includes('code=')) {
-      handleCallback();
-    } else {
-      router.push('/auth');
-    }
+    handleCallback();
   }, [router]);
 
   return (

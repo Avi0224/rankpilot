@@ -1,10 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
+import { Database } from './types';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-// Temporarily remove Database generic to fix 'never' type errors in admin pages during build
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+// Use any for the client to avoid strict table schema errors in admin pages, 
+// while still providing the Database type for manual casting in queries.
+export const supabase = createClient<any>(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
