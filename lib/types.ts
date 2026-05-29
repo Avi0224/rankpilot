@@ -4,6 +4,8 @@ export type Quota = 'AI' | 'HS' | 'OS';
 export type Gender = 'Gender-Neutral' | 'Female-only';
 export type CounsellingType = 'JoSAA' | 'CSAB' | 'JAC Delhi' | 'COMEDK' | 'MHT CET' | 'State';
 
+export const CATEGORIES: Category[] = ['OPEN', 'OBC-NCL', 'SC', 'ST', 'EWS', 'OPEN-PwD'];
+
 export interface College {
   id: string;
   name: string;
