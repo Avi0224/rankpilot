@@ -19,13 +19,13 @@ export interface College {
   hostel_fees_per_year: number | null;
   campus_size_acres: number | null;
   established_year: number | null;
-  total_seats: number | null;
+  total_seats?: number | null;
   placement_percentage: number | null;
   roi_score: number | null;
-  image_url: string | null;
-  website: string | null;
-  accreditation: string | null;
-  created_at: string;
+  image_url?: string | null;
+  website?: string | null;
+  accreditation?: string | null;
+  created_at?: string;
 }
 
 export interface Branch {
@@ -35,7 +35,7 @@ export interface Branch {
   branch_code: string;
   total_seats: number;
   avg_package: number | null;
-  created_at: string;
+  created_at?: string;
 }
 
 export interface Cutoff {
@@ -49,7 +49,7 @@ export interface Cutoff {
   gender: Gender;
   opening_rank: number;
   closing_rank: number;
-  created_at: string;
+  created_at?: string;
 }
 
 export interface UserProfile {

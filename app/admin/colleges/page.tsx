@@ -204,7 +204,7 @@ export default function CollegesDatabasePage() {
       hostel_fees_per_year: college.hostel_fees_per_year,
       campus_size_acres: college.campus_size_acres,
       established_year: college.established_year,
-      total_seats: college.total_seats,
+      total_seats: college.total_seats ?? null,
       placement_percentage: college.placement_percentage,
       roi_score: college.roi_score,
       website: college.website || '',

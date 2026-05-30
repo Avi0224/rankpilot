@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { Category, Quota, Gender, PredictionResult, PredictorParams } from '@/types';
+import { Category, Quota, Gender, PredictionResult, PredictorParams, Cutoff } from '@/types';
 import { unstable_cache } from 'next/cache';
 
 /**
@@ -124,10 +124,8 @@ export const predictColleges = async (params: PredictorParams): Promise<Predicti
   }
 
   // 4. Map and Cache Results
-  const results = (data || []).map((item: any): PredictionResult => ({
-    ...item,
-    confidenceScore: item.confidence_score,
-    cutoff: {
+  const results = (data || []).map((item: any): PredictionResult => {
+    const cutoff: Cutoff = {
       id: item.id,
       college_id: item.college_id,
       branch_id: item.branch_id,
@@ -139,8 +137,14 @@ export const predictColleges = async (params: PredictorParams): Promise<Predicti
       opening_rank: item.opening_rank,
       closing_rank: item.closing_rank,
       created_at: new Date().toISOString()
-    }
-  }));
+    };
+
+    return {
+      ...item,
+      confidenceScore: item.confidence_score,
+      cutoff
+    };
+  });
 
   predictionCache.set(clientKey, { data: results, timestamp: Date.now() });
   return results;
@@ -204,12 +208,26 @@ async function predictCollegesClientSide(params: PredictorParams): Promise<Predi
       reason = 'Ambitious target. Admission depends on slight trend shifts.';
     }
 
+    const cutoff: Cutoff = {
+      id: item.id,
+      college_id: item.college_id,
+      branch_id: item.branch_id,
+      year: item.year,
+      round: item.round,
+      category: item.category,
+      quota: item.quota,
+      gender: item.gender,
+      opening_rank: item.opening_rank,
+      closing_rank: item.closing_rank,
+      created_at: item.created_at
+    };
+
     return {
       ...item,
       probability,
       confidenceScore,
       reason,
-      cutoff: item // Matching the PredictionResult structure
+      cutoff
     };
   });
 }
