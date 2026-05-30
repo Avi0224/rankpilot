@@ -12,6 +12,8 @@ import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 
+import { env } from '@/lib/env';
+
 export default function AuthPage() {
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [email, setEmail] = useState('');
@@ -26,6 +28,7 @@ export default function AuthPage() {
 
   useEffect(() => {
     if (!authLoading && user) {
+      console.log('[DEBUG] User already logged in, redirecting to dashboard');
       router.push('/dashboard');
     }
     
@@ -41,24 +44,33 @@ export default function AuthPage() {
 
     try {
       if (mode === 'signup') {
-        const { error: signUpError } = await supabase.auth.signUp({
+        const { data, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: { 
             data: { name },
-            emailRedirectTo: `${window.location.origin}/auth/callback`
+            emailRedirectTo: `${env.siteUrl}/auth/callback`
           },
         });
         if (signUpError) throw signUpError;
+        console.log('[DEBUG] SignUp Success:', data.user?.id);
         toast.success('Check your email for the confirmation link!');
         setMode('login');
       } else {
-        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) throw signInError;
+        
+        console.log('[DEBUG] SignIn Success, Session:', !!data.session);
         toast.success('Welcome back!');
-        router.push('/dashboard');
+        
+        // Use a small delay to ensure session is persisted in cookies/localStorage
+        setTimeout(() => {
+          router.push('/dashboard');
+          router.refresh();
+        }, 500);
       }
     } catch (err: any) {
+      console.error('[DEBUG] Auth Error:', err);
       toast.error(err.message || 'Authentication failed');
     } finally {
       setLoading(false);
@@ -67,10 +79,11 @@ export default function AuthPage() {
 
   const handleGoogleLogin = async () => {
     try {
+      console.log('[DEBUG] Starting Google OAuth, Redirect URL:', `${env.siteUrl}/auth/callback`);
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: { 
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${env.siteUrl}/auth/callback`,
           queryParams: {
             access_type: 'offline',
             prompt: 'select_account',
@@ -79,6 +92,7 @@ export default function AuthPage() {
       });
       if (error) throw error;
     } catch (err: any) {
+      console.error('[DEBUG] Google OAuth Error:', err);
       toast.error(err.message || 'Google login failed');
     }
   };

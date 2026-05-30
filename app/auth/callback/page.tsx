@@ -11,18 +11,24 @@ export default function AuthCallback() {
 
   useEffect(() => {
     const handleCallback = async () => {
+      console.log('[DEBUG] Auth callback route reached');
       const searchParams = new URLSearchParams(window.location.search);
       const code = searchParams.get('code');
 
       if (code) {
-        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        console.log('[DEBUG] Auth code found, exchanging for session...');
+        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+        
         if (error) {
-          console.error('Auth callback error:', error.message);
-          router.push('/auth?error=Authentication failed');
+          console.error('[DEBUG] Auth callback error:', error.message);
+          router.push(`/auth?error=${encodeURIComponent(error.message)}`);
         } else {
+          console.log('[DEBUG] Session established successfully:', !!data.session);
           router.push('/dashboard');
+          router.refresh();
         }
       } else {
+        console.warn('[DEBUG] No auth code found in URL');
         router.push('/auth');
       }
     };
