@@ -15,17 +15,17 @@ import { toast } from 'sonner';
 import { type PredictionResult, type Category, type Quota, type Gender, type PredictorParams } from '@/types';
 import { CATEGORIES, QUOTAS, GENDERS } from '@/constants';
 import { predictorSchema } from '@/utils/validations';
-import dynamic from 'next/dynamic';
+import nextDynamic from 'next/dynamic';
 
-const PredictionCard = dynamic(() => import('@/components/features/dashboard/PredictionCard'), {
+const PredictionCard = nextDynamic(() => import('@/components/features/dashboard/PredictionCard'), {
   loading: () => <PredictionSkeleton />
 });
 
-const AdvancedFilters = dynamic(() => import('@/components/features/dashboard/AdvancedFilters'), {
+const AdvancedFilters = nextDynamic(() => import('@/components/features/dashboard/AdvancedFilters'), {
   ssr: false
 });
 
-const PredictionSkeleton = dynamic(() => import('@/components/features/dashboard/PredictionSkeleton').then(mod => mod.PredictionSkeleton));
+const PredictionSkeleton = nextDynamic(() => import('@/components/features/dashboard/PredictionSkeleton').then(mod => mod.PredictionSkeleton));
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
