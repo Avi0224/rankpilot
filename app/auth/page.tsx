@@ -1,12 +1,14 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Zap, Mail, Lock, User, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/services/supabase';
+import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 
@@ -245,4 +247,5 @@ export default function AuthPage() {
     </div>
   );
 }
+
 

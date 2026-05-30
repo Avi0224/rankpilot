@@ -1,6 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+export const dynamic = 'force-dynamic';
+
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
   BarChart3, Search, Filter, Download, ChevronDown,
@@ -182,3 +184,4 @@ export default function CutoffRecordsPage() {
     </div>
   );
 }
+

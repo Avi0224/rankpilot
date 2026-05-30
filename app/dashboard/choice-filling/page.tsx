@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useState, useEffect } from 'react';
 import { motion, Reorder } from 'framer-motion';
 import { 
@@ -170,3 +172,4 @@ export default function ChoiceFillingPage() {
     </div>
   );
 }
+

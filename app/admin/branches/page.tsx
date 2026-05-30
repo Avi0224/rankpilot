@@ -1,6 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+export const dynamic = 'force-dynamic';
+
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
   GitBranch, Search, Plus, Edit, Trash2, CheckCircle2,
@@ -185,3 +187,4 @@ export default function BranchMappingPage() {
     </div>
   );
 }
+

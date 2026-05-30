@@ -1,11 +1,13 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Upload, FileText, CheckCircle2, AlertCircle, Loader2, Database, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Papa from 'papaparse';
-import { supabase } from '@/services/supabase';
+import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
 export default function DataUploadPage() {
@@ -198,4 +200,5 @@ export default function DataUploadPage() {
     </div>
   );
 }
+
 

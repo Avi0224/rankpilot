@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { supabase } from '@/services/supabase';
+import { supabase } from '@/lib/supabase';
 import type { User, Session } from '@supabase/supabase-js';
 import type { UserProfile } from '@/types';
 

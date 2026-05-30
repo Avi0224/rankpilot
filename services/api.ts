@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase } from '@/lib/supabase';
 import { Category, Quota, Gender, PredictionResult, PredictorParams, Cutoff } from '@/types';
 import { unstable_cache } from 'next/cache';
 

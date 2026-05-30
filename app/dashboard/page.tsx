@@ -31,6 +31,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { cn } from '@/utils';
 
+export const dynamic = 'force-dynamic';
+
 export default function DashboardPage() {
   const { user, profile } = useAuth();
   const router = useRouter();
