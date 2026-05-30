@@ -9,13 +9,13 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { getCollegeById, toggleSaveCollege } from '@/lib/queries';
+import { getCollegeById, toggleSaveCollege } from '@/services/api';
 import { useAuth } from '@/hooks/use-auth';
 import { useRecentlyViewed } from '@/hooks/use-recently-viewed';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+import { cn } from '@/utils';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell
 } from 'recharts';

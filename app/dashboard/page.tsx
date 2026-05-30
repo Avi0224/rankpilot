@@ -9,17 +9,27 @@ import {
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { predictColleges, toggleSaveCollege } from '@/lib/queries';
+import { predictColleges, toggleSaveCollege } from '@/services/api';
 import { useAuth } from '@/hooks/use-auth';
 import { toast } from 'sonner';
-import { CATEGORIES, QUOTAS, GENDERS, type PredictionResult, type Category, type Quota, type Gender, type PredictorParams } from '@/lib/types';
-import { predictorSchema } from '@/lib/validations';
-import PredictionCard from '@/components/dashboard/PredictionCard';
-import AdvancedFilters from '@/components/dashboard/AdvancedFilters';
+import { type PredictionResult, type Category, type Quota, type Gender, type PredictorParams } from '@/types';
+import { CATEGORIES, QUOTAS, GENDERS } from '@/constants';
+import { predictorSchema } from '@/utils/validations';
+import dynamic from 'next/dynamic';
+
+const PredictionCard = dynamic(() => import('@/components/features/dashboard/PredictionCard'), {
+  loading: () => <PredictionSkeleton />
+});
+
+const AdvancedFilters = dynamic(() => import('@/components/features/dashboard/AdvancedFilters'), {
+  ssr: false
+});
+
+const PredictionSkeleton = dynamic(() => import('@/components/features/dashboard/PredictionSkeleton').then(mod => mod.PredictionSkeleton));
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { cn } from '@/lib/utils';
+import { cn } from '@/utils';
 
 export default function DashboardPage() {
   const { user, profile } = useAuth();
@@ -43,8 +53,6 @@ export default function DashboardPage() {
     instituteTypes: [],
     states: [],
     branches: [],
-    minPackage: 0,
-    maxFees: 2000000
   });
 
   // Sync with URL params on mount
@@ -463,3 +471,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+

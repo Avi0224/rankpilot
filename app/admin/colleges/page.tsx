@@ -7,8 +7,9 @@ import {
   X, Save, Loader2, AlertTriangle, CheckCircle2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/lib/supabase';
-import { type College, type CollegeType, INDIAN_STATES } from '@/lib/types';
+import { supabase } from '@/services/supabase';
+import { type College, type CollegeType } from '@/types';
+import { INDIAN_STATES } from '@/constants';
 
 const COLLEGE_TYPES: CollegeType[] = ['IIT', 'NIT', 'IIIT', 'GFTIs', 'State'];
 
@@ -85,9 +86,11 @@ export default function CollegesDatabasePage() {
   // Filtered colleges - memoized
   const filteredColleges = useMemo(() => {
     return colleges.filter((c) => {
-      if (typeFilter !== 'all' && c.type !== typeFilter) return false;
-      if (search && !c.name.toLowerCase().includes(search.toLowerCase()) && !c.short_name.toLowerCase().includes(search.toLowerCase())) return false;
-      return true;
+      const matchesType = typeFilter === 'all' || c.type === typeFilter;
+      const matchesSearch = !search || 
+        c.name.toLowerCase().includes(search.toLowerCase()) || 
+        c.short_name.toLowerCase().includes(search.toLowerCase());
+      return matchesType && matchesSearch;
     });
   }, [colleges, typeFilter, search]);
 
@@ -423,7 +426,7 @@ export default function CollegesDatabasePage() {
                       className="w-full bg-[#050816] border border-blue-900/30 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500/50"
                     >
                       <option value="">Select State</option>
-                      {INDIAN_STATES.map((s) => (
+                      {INDIAN_STATES.map((s: string) => (
                         <option key={s} value={s}>{s}</option>
                       ))}
                     </select>
@@ -556,3 +559,4 @@ export default function CollegesDatabasePage() {
     </div>
   );
 }
+

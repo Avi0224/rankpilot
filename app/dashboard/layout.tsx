@@ -1,15 +1,24 @@
 'use client';
 
-import Sidebar from '@/components/dashboard/Sidebar';
-import ComparisonBar from '@/components/dashboard/ComparisonBar';
+import Sidebar from '@/components/features/dashboard/Sidebar';
+import ComparisonBar from '@/components/features/dashboard/ComparisonBar';
 import Link from 'next/link';
-import { Bell, Search, User, Menu } from 'lucide-react';
+import Image from 'next/image';
+import { Bell, Search, User, Menu, LogOut, Zap } from 'lucide-react';
 import { useState } from 'react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/use-auth';
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user, profile, loading, signOut } = useAuth();
 
   return (
     <div className="flex h-screen bg-[#050816] overflow-hidden">
@@ -35,20 +44,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </SheetContent>
             </Sheet>
 
-            <div className="md:hidden flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center glow-blue">
-                <span className="text-white font-bold text-[10px]">RP</span>
+            <Link href="/" className="md:hidden flex items-center gap-2 group">
+              <div className="relative w-8 h-8 flex items-center justify-center transition-transform group-hover:scale-105">
+                <Image 
+                  src="/logo.svg" 
+                  alt="RankPilot JEE Logo" 
+                  width={28} 
+                  height={28} 
+                  className="object-contain"
+                />
               </div>
-            </div>
-
-            <div className="hidden md:flex relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-              <input
-                type="text"
-                placeholder="Search colleges, branches..."
-                className="bg-[#0B1120] border border-blue-900/30 rounded-lg pl-9 pr-4 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-blue-500/50 w-56 transition-colors"
-              />
-            </div>
+              <span className="text-white font-black text-sm tracking-tight">
+                RankPilot <span className="gradient-text">JEE</span>
+              </span>
+            </Link>
           </div>
 
           <div className="flex items-center gap-2 md:gap-3">
@@ -57,17 +66,48 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-blue-500" />
             </button>
             
-            <Link href="/dashboard?tab=settings" className="hidden sm:block">
-              <div className="w-8 h-8 rounded-lg bg-[#0B1120] border border-blue-900/30 flex items-center justify-center text-slate-500 hover:text-white transition-all">
-                <User className="w-3.5 h-3.5" />
-              </div>
-            </Link>
+            {!loading && (
+              user ? (
+                <div className="flex items-center gap-3">
+                  <div className="hidden lg:flex flex-col items-end">
+                    <span className="text-xs font-bold text-white leading-none">
+                      {profile?.name || user.email?.split('@')[0]}
+                    </span>
+                    <span className="text-[10px] text-slate-500 font-medium">
+                      Aspirant
+                    </span>
+                  </div>
 
-            <Link href="/auth">
-              <Button size="sm" className="bg-blue-600 hover:bg-blue-500 text-white text-[10px] h-8 px-3 md:text-xs">
-                Sign In
-              </Button>
-            </Link>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="w-8 h-8 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400 cursor-pointer hover:bg-blue-600/30 transition-all">
+                          <User className="w-4 h-4" />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-[#0B1120] border-blue-900/30 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5">
+                        Logged in as {user.email}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={signOut}
+                    className="w-8 h-8 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-400/10"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              ) : (
+                <Link href="/auth">
+                  <Button size="sm" className="bg-blue-600 hover:bg-blue-500 text-white text-[10px] h-8 px-3 md:text-xs font-bold uppercase tracking-wider rounded-lg shadow-lg shadow-blue-600/20">
+                    Sign In
+                  </Button>
+                </Link>
+              )
+            )}
           </div>
         </header>
 
@@ -82,3 +122,4 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     </div>
   );
 }
+

@@ -1,15 +1,15 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-import { AuthProvider } from '@/hooks/use-auth';
-import { ComparisonProvider } from '@/hooks/use-compare';
-import { RecentlyViewedProvider } from '@/hooks/use-recently-viewed';
+import { AuthProvider } from '@/providers/auth-provider';
+import { ComparisonProvider } from '@/providers/comparison-provider';
+import { RecentlyViewedProvider } from '@/providers/recently-viewed-provider';
 import { Toaster } from 'sonner';
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'RankPilot — JEE Main College Predictor',
+  title: 'RankPilot JEE — College Predictor',
   description: 'Predict colleges based on your JEE Main rank. Compare cutoffs, ROI, placements, fees, and branches across 500+ engineering colleges in India.',
   keywords: 'JEE Main predictor, college predictor, JoSAA counselling, NIT predictor, cutoff ranks, engineering colleges India',
 };

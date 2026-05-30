@@ -6,7 +6,7 @@ import { Zap, Mail, Lock, User, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/services/supabase';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 
@@ -245,3 +245,4 @@ export default function AuthPage() {
     </div>
   );
 }
+
